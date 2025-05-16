@@ -1,8 +1,57 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const WritePostPage = () => {
+  const [nickname, setNickname] = useState('');
+  const [content, setContent] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post('/api/posts', {
+        nickname,
+        content,
+      });
+
+      console.log('등록 성공:', response.data);
+      // 필요 시 → 등록 완료 후 메인 피드로 이동
+    } catch (error) {
+      console.error('게시글 등록 실패:', error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="p-4 space-y-4">
+      <input
+        type="text"
+        placeholder="닉네임"
+        value={nickname}
+        onChange={(e) => setNickname(e.target.value)}
+        className="w-full border p-2 rounded"
+      />
+      <textarea
+        placeholder="내용을 입력하세요"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        className="w-full border p-2 rounded h-40"
+      />
+      <button type="submit" className="bg-black text-white px-4 py-2 rounded">
+        등록하기
+      </button>
+    </form>
+  );
+};
+
+export default WritePostPage;
+
+/*
+
 import React from 'react';
 
 function WritePostPage() {
   const handleSubmit = () => {
-    // TODO: 게시글 등록 API 연결 예정 (POST /api/posts)
+    // 게시글 등록 API 연결 예정 (POST /api/posts)
     // const data = {
     //   content: ..., 
     //   images: [...]
@@ -93,3 +142,5 @@ const styles = {
 };
 
 export default WritePostPage;
+
+*/

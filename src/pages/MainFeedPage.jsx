@@ -1,3 +1,57 @@
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+
+const MainFeedPage = () => {
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    // API 요청: 게시글 전체 조회
+    const fetchPosts = async () => {
+      try {
+        const response = await axios.get('/api/posts'); // 백엔드 주소는 추후 수정
+        setPosts(response.data); // 백엔드 응답 구조에 맞춰 조정 필요
+      } catch (error) {
+        console.error('게시글 불러오기 실패:', error);
+      }
+    };
+
+    fetchPosts();
+  }, []);
+
+  return (
+    <div className="p-4">
+      <h1 className="text-xl font-bold mb-4">명예의 라운지</h1>
+      <div className="space-y-4">
+        {posts.map((post) => (
+          <div
+            key={post.id} // 실제 백엔드 데이터 키에 맞게 수정
+            className="bg-white rounded-lg shadow-md p-4"
+          >
+            <div className="text-sm text-gray-500 mb-2">{post.nickname || '익명'} · {post.createdAt?.slice(0, 10)}</div>
+            <div className="text-base font-medium">{post.content}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default MainFeedPage;
+
+/*
+[
+  {
+    "id": 1,
+    "nickname": "피카피카 아톤",
+    "content": "한국장학재단 기기괴괴 일화 공유해드림",
+    "createdAt": "2024-05-10T12:00:00"
+  },
+  ...
+]
+*/
+
+/*
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -50,7 +104,6 @@ function MainFeedPage() {
 
       <div style={styles.sectionTitle}>Best 톡</div>
 
-      {/* 🔹 게시글 강조 카드 → 실제 데이터 불러오기 필요 (GET /api/posts) */}
       <div style={styles.highlightCard}>
         <div style={styles.imageBox}></div>
         <div style={styles.cardTextWrapper}>
@@ -70,7 +123,6 @@ function MainFeedPage() {
         <button style={styles.filterInactive}>...</button>
       </div>
 
-      {/* 🔹 게시글 목록 불러오기 자리 (GET /api/posts) */}
       <div style={styles.feedList}>
         {[1, 2, 3, 4, 5, 6].map((item, idx) => (
           <div
@@ -256,3 +308,5 @@ const styles = {
 };
 
 export default MainFeedPage;
+
+*/
