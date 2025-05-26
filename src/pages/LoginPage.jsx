@@ -1,51 +1,94 @@
 import React from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import kakaoIcon from '../assets/kakao.svg';
 
-function LoginPage() {
+const LoginPage = () => {
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    // TODO: 백엔드 카카오 로그인 URL로 리다이렉트 → /api/auth/kakao/login
-    // window.location.href = 'http://localhost:8080/api/auth/kakao/login';
+  const handleKakaoLogin = () => {
+    if (!window.Kakao) {
+      alert('카카오 SDK가 로드되지 않았습니다.');
+      return;
+    }
 
-    // (테스트용 임시 로직)
-    localStorage.setItem('auth', 'true');
-    navigate('/gps');
+    window.Kakao.Auth.login({
+      scope: 'profile_nickname, account_email, profile_image',
+      success: function (authObj) {
+        const kakaoAccessToken = authObj.access_token;
+
+        axios
+          .post('/api/auth/kakao/login', {
+            accessToken: kakaoAccessToken
+          })
+          .then((res) => {
+            const { accessToken, refreshToken, requireGps } = res.data.result;
+
+            localStorage.setItem('accessToken', accessToken);
+            localStorage.setItem('refreshToken', refreshToken);
+            localStorage.setItem('auth', 'true');
+            localStorage.setItem('gps', requireGps ? 'false' : 'true');
+            console.log('Kakao Access Token:', kakaoAccessToken);
+            console.log('Access Token:', accessToken);
+            console.log('requireGps:', requireGps);
+
+            if (requireGps) {
+              localStorage.setItem('gps', 'false'); // 인증 필요
+              navigate('/gps');
+            } else {
+              localStorage.setItem('gps', 'true'); // 인증 불필요 → 바로 /main 가능
+              navigate('/main');
+            }
+          })
+          .catch((err) => {
+            console.error('로그인 실패:', err);
+            alert('로그인에 실패했습니다.');
+          });
+      },
+      fail: function (err) {
+        console.error('카카오 로그인 실패:', err);
+        alert('카카오 로그인 실패');
+      }
+    });
   };
 
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.loginBox}>
-        <img
-          src="/kakao_login_medium_narrow.png"
-          alt="카카오 로그인"
-          style={styles.kakaoButton}
-          onClick={handleLogin}
-        />
-      </div>
+    <div style={styles.container}>
+      {/* 회색 상자 */}
+      <div style={styles.grayBox}></div>
+
+      {/* 카카오 로그인 아이콘 이미지 (버튼 대신 클릭) */}
+      <img
+        src={kakaoIcon}
+        alt="카카오 로그인"
+        style={styles.kakaoIcon}
+        onClick={handleKakaoLogin}
+      />
     </div>
   );
-}
+};
 
 const styles = {
-  wrapper: {
-    backgroundColor: '#985f5f', //  배경색
-    height: '100vh',
+  container: {
     display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'flex-end',
-    maxWidth: '430px',
-    margin: '0 auto',
+    height: '100vh',
+    backgroundColor: '#fff'
   },
-  loginBox: {
-    width: '100%',
-    padding: '32px',
-    textAlign: 'center',
+  grayBox: {
+    width: '360px',
+    height: '360px',
+    backgroundColor: '#ddd',
+    borderRadius: '20px',
+    marginBottom: '40px'
   },
-  kakaoButton: {
-    width: '260px',
-    cursor: 'pointer',
-  },
+  kakaoIcon: {
+    width: '540px',   
+    height: '135px',   
+    cursor: 'pointer'
+  }
 };
 
 export default LoginPage;

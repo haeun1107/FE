@@ -1,17 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+const kakaoKey = '0ed3854f979dd16e1531d7ab36086a4b';
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+function loadKakaoScript(callback) {
+  const script = document.createElement('script');
+  script.src = 'https://developers.kakao.com/sdk/js/kakao.js';
+  script.async = true;
+  script.onload = () => {
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(kakaoKey);
+      console.log('✅ Kakao SDK Initialized');
+    }
+    callback();
+  };
+  document.head.appendChild(script);
+}
+
+loadKakaoScript(() => {
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+});

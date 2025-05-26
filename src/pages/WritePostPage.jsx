@@ -1,146 +1,85 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const WritePostPage = () => {
-  const [nickname, setNickname] = useState('');
+  const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     try {
-      const response = await axios.post('/api/posts', {
-        nickname,
-        content,
+      const token = localStorage.getItem('accessToken');
+      await axios.post('/api/posts', {
+        title,
+        content
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       });
-
-      console.log('등록 성공:', response.data);
-      // 필요 시 → 등록 완료 후 메인 피드로 이동
-    } catch (error) {
-      console.error('게시글 등록 실패:', error);
+      alert('게시글이 등록되었습니다.');
+      navigate('/main');
+    } catch (err) {
+      console.error('게시글 등록 실패:', err);
+      alert('게시글 등록에 실패했습니다.');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 space-y-4">
+    <div style={styles.container}>
+      <h2>게시글 작성</h2>
       <input
         type="text"
-        placeholder="닉네임"
-        value={nickname}
-        onChange={(e) => setNickname(e.target.value)}
-        className="w-full border p-2 rounded"
+        placeholder="제목을 입력하세요"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        style={styles.input}
       />
       <textarea
         placeholder="내용을 입력하세요"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        className="w-full border p-2 rounded h-40"
+        rows={10}
+        style={styles.textarea}
       />
-      <button type="submit" className="bg-black text-white px-4 py-2 rounded">
-        등록하기
-      </button>
-    </form>
+      <button onClick={handleSubmit} style={styles.button}>등록</button>
+    </div>
   );
 };
 
-export default WritePostPage;
-
-/*
-
-import React from 'react';
-
-function WritePostPage() {
-  const handleSubmit = () => {
-    // 게시글 등록 API 연결 예정 (POST /api/posts)
-    // const data = {
-    //   content: ..., 
-    //   images: [...]
-    // };
-    // axios.post('/api/posts', data).then(...).catch(...);
-    alert('게시글 등록은 백엔드 API 연결 후 작동합니다.');
-  };
-
-  return (
-    <div style={styles.outer}>
-      <div style={styles.wrapper}>
-        <h3 style={styles.title}>새 글 작성</h3>
-        <textarea
-          placeholder="텍스트를 입력하세요"
-          style={styles.textarea}
-        ></textarea>
-
-        <div style={styles.imagePreviewContainer}>
-          <div style={styles.imageBox}>이미지1</div>
-          <div style={styles.imageBox}>이미지2</div>
-          <div style={styles.imageBox}>이미지3</div>
-        </div>
-
-        <button style={styles.sendButton} onClick={handleSubmit}>📩</button>
-      </div>
-    </div>
-  );
-}
-
 const styles = {
-  outer: {
-    backgroundColor: '#f1f1f1',
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
+  container: {
+    padding: '20px',
+    fontFamily: 'sans-serif'
   },
-  wrapper: {
+  input: {
     width: '100%',
-    maxWidth: '430px',
-    backgroundColor: '#fff',
-    padding: '16px',
-    boxSizing: 'border-box',
-    fontFamily: 'sans-serif',
-  },
-  title: {
-    marginBottom: '12px',
+    padding: '10px',
+    fontSize: '16px',
+    marginBottom: '10px',
+    borderRadius: '6px',
+    border: '1px solid #ccc'
   },
   textarea: {
     width: '100%',
-    height: '200px',
-    padding: '12px',
-    fontSize: '14px',
+    padding: '10px',
+    fontSize: '16px',
+    borderRadius: '6px',
     border: '1px solid #ccc',
-    borderRadius: '8px',
-    resize: 'none',
-    boxSizing: 'border-box',
+    resize: 'vertical'
   },
-  imagePreviewContainer: {
-    display: 'flex',
-    gap: '10px',
+  button: {
     marginTop: '12px',
-  },
-  imageBox: {
-    flex: '1 1 0',
-    height: '80px',
-    backgroundColor: '#f0f0f0',
+    width: '100%',
+    padding: '12px',
+    fontSize: '16px',
     borderRadius: '8px',
-    textAlign: 'center',
-    lineHeight: '80px',
-    color: '#999',
-    fontSize: '14px',
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-  },
-  sendButton: {
-    position: 'fixed',
-    bottom: '24px',
-    right: '24px',
-    width: '56px',
-    height: '56px',
-    borderRadius: '50%',
-    backgroundColor: '#4e74f9',
+    backgroundColor: '#007bff',
+    color: '#fff',
     border: 'none',
-    color: 'white',
-    fontSize: '20px',
-    cursor: 'pointer',
-  },
+    cursor: 'pointer'
+  }
 };
 
 export default WritePostPage;
-
-*/

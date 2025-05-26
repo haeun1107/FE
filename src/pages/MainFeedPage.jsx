@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const MainFeedPage = () => {
   const [posts, setPosts] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // API 요청: 게시글 전체 조회
     const fetchPosts = async () => {
       try {
-        const response = await axios.get('/api/posts'); // 백엔드 주소는 추후 수정
-        setPosts(response.data); // 백엔드 응답 구조에 맞춰 조정 필요
+        const token = localStorage.getItem('accessToken');
+        const response = await axios.get('/api/posts?sortType=recent', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        setPosts(response.data.result.posts);
       } catch (error) {
-        console.error('게시글 불러오기 실패:', error);
+        console.error('게시글 조회 실패:', error);
+        alert('게시글을 불러오지 못했습니다.');
       }
     };
 
@@ -19,294 +27,107 @@ const MainFeedPage = () => {
   }, []);
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">명예의 라운지</h1>
-      <div className="space-y-4">
-        {posts.map((post) => (
-          <div
-            key={post.id} // 실제 백엔드 데이터 키에 맞게 수정
-            className="bg-white rounded-lg shadow-md p-4"
-          >
-            <div className="text-sm text-gray-500 mb-2">{post.nickname || '익명'} · {post.createdAt?.slice(0, 10)}</div>
-            <div className="text-base font-medium">{post.content}</div>
-          </div>
-        ))}
+    <div style={styles.container}>
+      <h2 style={styles.header}>📰 명예의 라운지 📰</h2>
+
+      {posts.map((post) => (
+      <div
+        key={post.postId}
+        style={styles.postCard}
+        onClick={() => navigate(`/posts/${post.postId}`)}
+      >
+        <div style={styles.postMeta}>
+          <span style={styles.nickname}>{post.nickname}</span>
+          <span style={styles.date}>{post.createdAt}</span>
+        </div>
+        <div style={styles.title}>{truncateTitle(post.title)}</div>
+        <div style={styles.engagement}>
+          ❤️ {post.likeCount} · 👁️ {post.viewCount} · 💬 {post.commentCount}
+        </div>
       </div>
+    ))}
+
+
+      <button
+        onClick={() => navigate('/write')}
+        style={{
+          position: 'fixed',
+          bottom: '30px',
+          right: '30px',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          backgroundColor: '#007bff',
+          color: '#fff',
+          fontSize: '32px',
+          border: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+        }}
+      >
+        +
+      </button>
+
     </div>
   );
 };
 
-export default MainFeedPage;
+const truncateTitle = (title) => {
+  return title.length > 30 ? title.slice(0, 30) + '...' : title;
+};
 
-/*
-[
-  {
-    "id": 1,
-    "nickname": "피카피카 아톤",
-    "content": "한국장학재단 기기괴괴 일화 공유해드림",
-    "createdAt": "2024-05-10T12:00:00"
-  },
-  ...
-]
-*/
-
-/*
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  FaSearch,
-  FaUserCircle,
-  FaHeart,
-  FaPlus,
-  FaPaperPlane,
-} from 'react-icons/fa';
-import ProfileModal from '../components/ProfileModal';
-
-function MainFeedPage() {
-  const navigate = useNavigate();
-  const [showModal, setShowModal] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchText, setSearchText] = useState('');
-
-  const handleSearchInput = (e) => {
-    setSearchText(e.target.value);
-    console.log('검색어:', e.target.value);
-
-    // 🔹 게시글 검색 API 호출 자리 (GET /api/posts?keyword=키워드)
-    // fetch(`/api/posts?keyword=${e.target.value}`)...
-  };
-
-  const handleCancelSearch = () => {
-    setIsSearching(false);
-    setSearchText('');
-  };
-
-  return (
-    <div style={styles.pageWrapper} onClick={isSearching ? handleCancelSearch : undefined}>
-      {isSearching ? (
-        <div style={styles.searchBarWrapper} onClick={(e) => e.stopPropagation()}>
-          <input
-            type="text"
-            placeholder="검색어를 입력하세요"
-            value={searchText}
-            onChange={handleSearchInput}
-            autoFocus
-            style={styles.searchInput}
-          />
-        </div>
-      ) : (
-        <div style={styles.header}>
-          <FaSearch style={styles.icon} onClick={() => setIsSearching(true)} />
-          <FaUserCircle style={styles.icon} onClick={() => setShowModal(true)} />
-        </div>
-      )}
-
-      <div style={styles.sectionTitle}>Best 톡</div>
-
-      <div style={styles.highlightCard}>
-        <div style={styles.imageBox}></div>
-        <div style={styles.cardTextWrapper}>
-          <div style={styles.cardTitle}>톡 제목</div>
-          <div style={styles.cardMeta}>게시자 닉네임</div>
-        </div>
-        <img src="https://i.imgur.com/3GvwNBf.png" alt="profile" style={styles.roundProfile} />
-      </div>
-
-      <FaHeart style={styles.heartIcon} />
-
-      <div style={styles.filterTabs}>
-        <button style={styles.filterActive}>최신순</button>
-        <button style={styles.filterInactive}>인기순</button>
-        <button style={styles.filterInactive}>...</button>
-        <button style={styles.filterInactive}>...</button>
-        <button style={styles.filterInactive}>...</button>
-      </div>
-
-      <div style={styles.feedList}>
-        {[1, 2, 3, 4, 5, 6].map((item, idx) => (
-          <div
-            key={idx}
-            style={styles.card}
-            onClick={() => navigate(`/posts/${idx + 1}`)} // 🔹 게시글 상세 보기 (GET /api/posts/{postId})
-          >
-            <div style={styles.imageBox}></div>
-            <div style={styles.cardTextWrapper}>
-              <div style={styles.cardTitle}>톡 제목</div>
-              <div style={styles.cardMeta}>
-                게시자 닉네임 - {idx === 0 ? '59분 전' : '25/04/13'}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={styles.inputBar}>
-        <FaPlus style={styles.plusIcon} onClick={() => navigate('/write')} />
-        <input type="text" placeholder="텍스트" style={styles.inputField} />
-        <FaPaperPlane style={styles.sendIcon} onClick={() => {
-          // 🔹 댓글 등록 자리 (POST /api/posts/{postId}/comments)
-          console.log('댓글 전송');
-        }} />
-      </div>
-
-      {showModal && (
-        <ProfileModal
-          onClose={() => setShowModal(false)}
-          onWithdraw={() => {
-            // 🔹 회원 탈퇴 확인 후 호출 (DELETE /api/auth/logout)
-            console.log('탈퇴 API 연결 예정');
-          }}
-        />
-      )}
-    </div>
-  );
-}
+const formatDate = (datetime) => {
+  const date = new Date(datetime);
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+};
 
 const styles = {
-  pageWrapper: {
-    maxWidth: '430px',
-    margin: '0 auto',
-    padding: '16px',
-    backgroundColor: '#ffffff',
+  container: {
+    padding: '20px',
+    backgroundColor: '#fff',
     minHeight: '100vh',
-    paddingBottom: '80px',
-    fontFamily: 'sans-serif',
-  },
-  searchBarWrapper: {
-    display: 'flex',
-    marginBottom: '12px',
-  },
-  searchInput: {
-    width: '100%',
-    padding: '10px 14px',
-    borderRadius: '12px',
-    border: '1px solid #ccc',
-    fontSize: '14px',
+    fontFamily: 'sans-serif'
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '12px',
-  },
-  icon: {
     fontSize: '20px',
-    color: '#000',
-  },
-  sectionTitle: {
     fontWeight: 'bold',
-    fontSize: '18px',
-    marginBottom: '12px',
+    marginBottom: '20px'
   },
-  highlightCard: {
-    backgroundColor: '#f4f7ff',
-    borderRadius: '16px',
-    padding: '12px',
-    display: 'flex',
-    alignItems: 'center',
-    position: 'relative',
-    marginBottom: '12px',
-  },
-  roundProfile: {
-    width: '48px',
-    height: '48px',
-    borderRadius: '999px',
-    position: 'absolute',
-    right: '16px',
-  },
-  imageBox: {
-    width: '48px',
-    height: '48px',
-    backgroundColor: '#d6d6e2',
-    borderRadius: '8px',
-  },
-  cardTextWrapper: {
-    marginLeft: '12px',
-  },
-  cardTitle: {
-    fontWeight: 'bold',
-    fontSize: '14px',
-  },
-  cardMeta: {
-    fontSize: '11px',
-    color: '#777',
-    marginTop: '4px',
-  },
-  heartIcon: {
-    color: '#000',
-    fontSize: '16px',
-    margin: '12px 0',
-  },
-  filterTabs: {
-    display: 'flex',
-    gap: '8px',
+  postCard: {
+    backgroundColor: '#f9f9f9',
+    borderRadius: '12px',
+    padding: '15px',
     marginBottom: '16px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    cursor: 'pointer', 
+    transition: 'background-color 0.2s', 
+    ':hover': {
+      backgroundColor: '#eee' 
+    }
   },
-  filterActive: {
-    backgroundColor: '#3478f6',
-    color: '#fff',
-    border: 'none',
-    borderRadius: '16px',
-    padding: '6px 12px',
-    fontSize: '12px',
-  },
-  filterInactive: {
-    backgroundColor: '#e0e0e0',
-    color: '#000',
-    border: 'none',
-    borderRadius: '16px',
-    padding: '6px 12px',
-    fontSize: '12px',
-  },
-  feedList: {
+  postMeta: {
+    fontSize: '14px',
+    color: '#666',
+    marginBottom: '8px',
     display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
+    justifyContent: 'space-between'
   },
-  card: {
-    backgroundColor: '#f4f7ff',
-    borderRadius: '16px',
-    padding: '12px',
-    display: 'flex',
-    alignItems: 'center',
+  nickname: {
+    fontWeight: '600'
   },
-  inputBar: {
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#f1f1f1',
-    padding: '12px 16px',
-    display: 'flex',
-    alignItems: 'center',
-    borderTop: '1px solid #ccc',
-    maxWidth: '430px',
-    margin: '0 auto',
-    width: '100%',
+  date: {
+    fontStyle: 'italic'
   },
-  plusIcon: {
+  title: {
     fontSize: '16px',
-    marginRight: '12px',
-    color: '#444',
+    fontWeight: 'bold',
+    color: '#333'
   },
-  inputField: {
-    flex: 1,
-    padding: '8px 12px',
-    borderRadius: '20px',
-    border: '1px solid #ccc',
+  engagement: {
     fontSize: '13px',
-    marginRight: '12px',
-  },
-  sendIcon: {
-    fontSize: '16px',
-    color: 'white',
-    backgroundColor: '#3478f6',
-    padding: '8px',
-    borderRadius: '50%',
-  },
+    color: '#999',
+    marginTop: '8px'
+  }
 };
 
 export default MainFeedPage;
-
-*/

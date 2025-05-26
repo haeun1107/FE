@@ -1,64 +1,59 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-function LocationAuth() {
+const LocationAuth = () => {
   const navigate = useNavigate();
 
-  const handleAuth = () => {
-    // TODO: POST /api/user/gps 위치 인증 요청 후 성공 시 아래 수행
-    localStorage.setItem('gps', 'true');
-    navigate('/main');
+  const handleGpsVerify = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(
+        '/api/user/gps',
+        { success: true },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('GPS 인증 응답:', response.data);
+      localStorage.setItem('gps', 'true');
+      navigate('/main');
+    } catch (error) {
+      console.error('GPS 인증 실패:', error);
+      alert('GPS 인증에 실패했습니다.');
+    }
   };
 
   return (
-    <div style={styles.outer}>
-      <div style={styles.wrapper}>
-        <h3>사용자 현 위치</h3>
-
-        <div id="map" style={styles.mapBox}>
-          지도 자리
-        </div>
-
-        <button onClick={handleAuth} style={styles.button}>
-          인증하기
-        </button>
-      </div>
+    <div style={styles.container}>
+      <h2>📍 위치 인증이 필요합니다</h2>
+      <p>정확한 서비스를 위해 GPS 인증을 진행해주세요.</p>
+      <button style={styles.button} onClick={handleGpsVerify}>
+        GPS 인증하기
+      </button>
     </div>
   );
-}
+};
 
 const styles = {
-  outer: {
-    backgroundColor: '#f1f1f1',
-    minHeight: '100vh',
-    display: 'flex',
-    justifyContent: 'center',
-  },
-  wrapper: {
-    width: '100%',
-    maxWidth: '430px',
-    backgroundColor: '#fff',
-    padding: '16px',
-    fontFamily: 'sans-serif',
-  },
-  mapBox: {
-    width: '100%',
-    height: '400px',
-    backgroundColor: '#eee',
-    borderRadius: '8px',
-    marginTop: '10px',
+  container: {
+    padding: '60px',
+    textAlign: 'center'
   },
   button: {
     marginTop: '20px',
-    width: '100%',
-    padding: '16px',
-    backgroundColor: '#3478f6',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
+    backgroundColor: '#007bff',
+    color: '#fff',
+    padding: '12px 20px',
     fontSize: '16px',
-    fontWeight: 'bold',
-  },
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer'
+  }
 };
 
 export default LocationAuth;
