@@ -37,7 +37,7 @@ const LoginPage = () => {
               navigate('/gps');
             } else {
               localStorage.setItem('gps', 'true'); // 인증 불필요 → 바로 /main 가능
-              navigate('/gps');
+              navigate('/main');
             }
           })
           .catch((err) => {
